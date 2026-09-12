@@ -154,15 +154,28 @@ wss.on('connection', ws => {
 async function start() {
   await webcmdBridge.init();
   server.listen(PORT, () => {
+    const url = `http://localhost:${PORT}`;
     console.log(`
 ========================================================================
 🚀 SLAB AGENT CONTROL CENTER is running!
-🌐 URL: http://localhost:${PORT}
+🌐 URL: ${url}
 🤖 LLM: ${process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite'}
 🔌 webcmd Daemon: Connected on Port ${process.env.WEBCMD_PORT || 9777}
 🛡️ HITL Approval Guard: ACTIVE (Hackathon Rule #2 Enforced)
 ========================================================================
     `);
+
+    // Auto-open dashboard in default browser
+    if (process.env.AUTO_OPEN !== 'false') {
+      const openCmd = process.platform === 'win32'
+        ? `start ${url}`
+        : process.platform === 'darwin'
+        ? `open ${url}`
+        : `xdg-open ${url}`;
+      import('child_process').then(({ exec }) => {
+        exec(openCmd, () => {});
+      });
+    }
   });
 }
 
