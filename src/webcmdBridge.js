@@ -58,6 +58,10 @@ export class WebcmdBridge {
         createdAt: Date.now(),
         name: cleanName
       });
+
+      // Warm up session and immediately pop open visible window
+      await this.runScript(sessionId, 'try { await page.bringToFront(); } catch (_) {}', 10).catch(() => {});
+
       return sessionId;
     } catch (err) {
       console.error('Failed to create webcmd session:', err.message);
@@ -147,7 +151,17 @@ export class WebcmdBridge {
     const filepath = path.join(this.tempDir, filename);
 
     try {
-      const wrappedScript = `try { await page.bringToFront(); } catch (_) {}\n${scriptCode}`;
+      const wrappedScript = `
+try {
+  const cdp = await context.newCDPSession(page);
+  const { windowId } = await cdp.send('Browser.getWindowForTarget');
+  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal' } });
+  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'maximized' } });
+  await page.bringToFront();
+} catch (_) {
+  try { await page.bringToFront(); } catch (__) {}
+}
+${scriptCode}`;
       await fs.writeFile(filepath, wrappedScript, 'utf8');
 
       const cmd = `webcmd --session ${sessionId} browser run --file "${filepath}" --timeout ${timeoutSec} -f json`;
