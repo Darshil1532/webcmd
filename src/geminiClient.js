@@ -3,7 +3,7 @@ dotenv.config();
 
 export class GeminiClient {
   constructor() {
-    this.apiKey = process.env.GEMINI_API_KEY || 'AIzaSyDIJeFSCF7TfkhCwrxaN4REU1Y38-AAAG0';
+    this.apiKey = process.env.GEMINI_API_KEY || 'AIzaSyCYsR7NJISluKgWtb4cRqZiLastYuV21oc';
     this.model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
     this.endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
   }
